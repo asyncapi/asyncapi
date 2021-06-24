@@ -139,6 +139,21 @@ This is applicable for `$ref` fields in the specification as follows from the [J
 
 By convention, the AsyncAPI Specification (A2S) file is named `asyncapi.json` or `asyncapi.yaml`.
 
+### <a name="traitInheritance"></a>Trait Inheritance
+
+When traits ([Operation Trait Object](#operationTraitObject) and [Message Trait Object](#messageTraitObject)) are defined, they MUST be merged into the target object according to the following rules:
+
+* Traits are merged with a recursive merge algorithm, as defined in the [JSON Merge Patch](https://tools.ietf.org/html/rfc7386) RFC. To summarize the main merge rules as a merge from source object into a target object:
+  * Objects are merged recursively (if the source and the target property are both objects).
+  * If the value of the source object property is `null`, the target object property gets removed.
+  * In all other cases (including arrays and `undefined`) the source object property overwrites the target object property.
+* The sequence of merging is the following
+  * Before applying merges, JSON Schema `$ref` MUST be dereferenced
+  * The [Message Object](#messageObject) and the [Operation Object](#operationObject) that the trait is applied to is the most specific and is therefore never overwritten, only extended.
+  * The order of the traits defines their specificity. Subsequent traits in the trait array are more specific.
+  * The resulting merge order is the following, with the most specific object to the right:
+    * `trait1`, `trait2`, `trait3`, ..., `message/operation object`
+
 ### <a name="schema"></a>Schema
 
 #### <a name="A2SObject"></a>AsyncAPI Object
@@ -661,7 +676,7 @@ Field Name | Type | Description
 <a name="operationObjectTags"></a>tags | [Tags Object](#tagsObject) | A list of tags for API documentation control. Tags can be used for logical grouping of operations.
 <a name="operationObjectExternalDocs"></a>externalDocs | [External Documentation Object](#externalDocumentationObject) | Additional external documentation for this operation.
 <a name="operationObjectBindings"></a>bindings | [Operation Bindings Object](#operationBindingsObject) \| [Reference Object](#referenceObject) | A map where the keys describe the name of the protocol and the values describe protocol-specific definitions for the operation.
-<a name="operationObjectTraits"></a>traits | [[Operation Trait Object](#operationTraitObject) &#124; [Reference Object](#referenceObject) ] | A list of traits to apply to the operation object. Traits MUST be merged into the operation object using the [JSON Merge Patch](https://tools.ietf.org/html/rfc7386) algorithm in the same order they are defined here.
+<a name="operationObjectTraits"></a>traits | [[Operation Trait Object](#operationTraitObject) &#124; [Reference Object](#referenceObject) ] | A list of traits to apply to the operation object. Traits MUST be merged into the operation object as defined in the [trait inheritance section](#traitInheritance). The resulting object MUST be a valid [Operation Object](#operationObject).
 <a name="operationObjectMessage"></a>message | [[Message Object](#messageObject) &#124; [Reference Object](#referenceObject)] | A definition of the message that will be published or received on this channel. `oneOf` is allowed here to specify multiple messages, however, **a message MUST be valid only against one of the referenced message objects.**
 
 This object can be extended with [Specification Extensions](#specificationExtensions).
@@ -1014,7 +1029,7 @@ Field Name | Type | Description
 <a name="messageObjectExternalDocs"></a>externalDocs | [External Documentation Object](#externalDocumentationObject) | Additional external documentation for this message.
 <a name="messageObjectBindings"></a>bindings | [Message Bindings Object](#messageBindingsObject) \| [Reference Object](#referenceObject) | A map where the keys describe the name of the protocol and the values describe protocol-specific definitions for the message.
 <a name="messageObjectExamples"></a>examples | [Map[`string`, `any`]] | An array of key/value pairs where keys MUST be either **headers** and/or **payload**. Values MUST contain examples that validate against the [headers](#messageObjectHeaders) or [payload](#messageObjectPayload) fields, respectively.
-<a name="messageObjectTraits"></a>traits | [[Message Trait Object](#messageTraitObject) &#124; [Reference Object](#referenceObject)] | A list of traits to apply to the message object. Traits MUST be merged into the message object using the [JSON Merge Patch](https://tools.ietf.org/html/rfc7386) algorithm in the same order they are defined here. The resulting object MUST be a valid [Message Object](#messageObject).
+<a name="messageObjectTraits"></a>traits | [[Message Trait Object](#messageTraitObject) &#124; [Reference Object](#referenceObject)] | A list of traits to apply to the message object. Traits MUST be merged into the message object as defined in the [trait inheritance section](#traitInheritance). The resulting object MUST be a valid [Message Object](#messageObject).
 
 This object can be extended with [Specification Extensions](#specificationExtensions).
 
